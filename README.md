@@ -19,7 +19,7 @@ ZeroTrace is an uninstaller that assists in removing unwanted programs from Wind
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-repo/ZeroTrace.git
+git clone https://github.com/VVoiddd/ZeroTrace
 ```
 
 2. Navigate to the project directory:
