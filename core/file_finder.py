@@ -11,6 +11,7 @@ os.makedirs(log_dir, exist_ok=True)
 
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 log_file = os.path.join(log_dir, f'file_finder_logs_{timestamp}.txt')
+app_data_log = os.path.join(log_dir, 'applicationdata.txt')
 
 logging.basicConfig(
     filename=log_file,
@@ -36,5 +37,8 @@ def find_installed_programs():
     except Exception as e:
         logging.error(f"Error retrieving installed programs: {str(e)}")
     
+    with open(app_data_log, 'a') as f:
+        f.write(f"Installed programs found: {installed_programs}\n")
+
     logging.info(f"Installed programs found: {installed_programs}")
     return installed_programs
