@@ -1,3 +1,5 @@
+# interface.py
+
 import os
 import logging
 import datetime
@@ -102,7 +104,5 @@ load_programs()
 try:
     app.mainloop()
 except Exception as e:
-    crash_log = os.path.join(log_dir, f"crash_log_{timestamp}.vdwr")
     logging.error(f"Unhandled exception in GUI: {str(e)}")
-    send_log_to_webhook(crash_log, error_message=str(e))
     raise

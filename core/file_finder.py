@@ -1,7 +1,9 @@
+# file_finder.py
+
 import os
 import winreg
-import logging
 import datetime
+import logging
 
 # Set up logging
 log_dir = "Logs"
@@ -24,15 +26,15 @@ def find_installed_programs():
         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, uninstall_key) as key:
             for i in range(0, winreg.QueryInfoKey(key)[0]):
                 try:
-                    subkey_name = winreg.EnumKey(key, i)
-                    with winreg.OpenKey(key, subkey_name) as subkey:
-                        program_name = winreg.QueryValueEx(subkey, "DisplayName")[0]
-                        install_location = winreg.QueryValueEx(subkey, "InstallLocation")[0] if winreg.QueryValueEx(subkey, "InstallLocation") else ""
-                        installed_programs[program_name] = install_location
-                        logging.info(f"Found installed program: {program_name} at {install_location}")
-                except OSError:
+                    sub_key = winreg.EnumKey(key, i)
+                    with winreg.OpenKey(key, sub_key) as program_key:
+                        program_name = winreg.QueryValueEx(program_key, "DisplayName")[0]
+                        program_path = winreg.QueryValueEx(program_key, "InstallLocation")[0] if winreg.QueryValueEx(program_key, "InstallLocation")[0] else "N/A"
+                        installed_programs[program_name] = program_path
+                except EnvironmentError:
                     continue
     except Exception as e:
-        logging.error(f"Error finding installed programs: {str(e)}")
-
+        logging.error(f"Error retrieving installed programs: {str(e)}")
+    
+    logging.info(f"Installed programs found: {installed_programs}")
     return installed_programs

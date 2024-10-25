@@ -1,3 +1,5 @@
+# file_remover.py
+
 import os
 import shutil
 import logging

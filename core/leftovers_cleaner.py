@@ -1,8 +1,9 @@
+# leftovers_cleaner.py
+
 import os
-import winreg
+import datetime
 import shutil
 import logging
-import datetime
 
 # Set up logging
 log_dir = "Logs"
