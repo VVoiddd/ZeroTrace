@@ -1,26 +1,51 @@
-# interface.py
-
 import os
 import logging
-import datetime
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
 from core import file_finder, leftovers_cleaner
 
 # Set up logging
 log_dir = "Logs"
 os.makedirs(log_dir, exist_ok=True)
 
-timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-log_file = os.path.join(log_dir, f'interface_logs_{timestamp}.vdwr')
+application_log = os.path.join(log_dir, 'applicationdata.txt')
 
 logging.basicConfig(
-    filename=log_file,
+    filename=application_log,
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-def on_program_select():
+# Custom dialog to ask for scan level
+def get_scan_level():
+    """Custom pop-up to select scan level."""
+    scan_level = None
+
+    # Create a custom popup dialog for scan selection
+    def select_scan_level(level):
+        nonlocal scan_level
+        scan_level = level
+        dialog.destroy()  # Close the popup once a selection is made
+
+    dialog = tk.Toplevel()
+    dialog.title("Select Scan Level")
+    dialog.geometry("300x150")
+    dialog.config(bg="#2C2C2C")
+
+    label = ttk.Label(dialog, text="Choose Scan Level", background="#2C2C2C", foreground="white", font=("Arial", 14))
+    label.pack(pady=10)
+
+    # Create buttons for the scan level
+    ttk.Button(dialog, text="Light", command=lambda: select_scan_level("light")).pack(pady=5)
+    ttk.Button(dialog, text="Medium", command=lambda: select_scan_level("medium")).pack(pady=5)
+    ttk.Button(dialog, text="Aggressive", command=lambda: select_scan_level("aggressive")).pack(pady=5)
+
+    dialog.grab_set()  # Makes the popup modal
+    dialog.wait_window()  # Wait until the popup is closed
+
+    return scan_level
+
+def on_program_select(program_listbox, installed_programs):
     """Handles program selection for deletion."""
     try:
         selected_program = program_listbox.get(program_listbox.curselection())
@@ -30,79 +55,62 @@ def on_program_select():
         logging.info(f"User confirmed deletion of: {selected_program}")
 
         if confirm:
-            # Remove the program
-            leftovers_cleaner.clean_up(selected_program)
-            messagebox.showinfo("Success", f"{selected_program} has been removed!")
+            # Ask if user wants a Windows backup
+            backup_confirm = messagebox.askyesno("Backup", "Would you like to create a Windows Backup before proceeding? (Recommended)")
+            if backup_confirm:
+                logging.info(f"User chose to create a backup for {selected_program}")
 
-            # Ask the user if they want to scan for leftovers
-            scan_leftovers = messagebox.askyesno("Scan for Leftovers", "Do you want to scan the entire Windows PC for leftovers related to this program?")
-            if scan_leftovers:
-                # Find and clean leftovers
-                leftovers = leftovers_cleaner.find_leftovers(selected_program)
-                leftovers_cleaner.clean_leftovers(leftovers)
-                messagebox.showinfo("Scan Complete", "Leftover files and directories have been cleaned!")
-            else:
-                messagebox.showinfo("No Scan", "No leftovers will be scanned.")
+            # Get scan level from the user
+            scan_level = get_scan_level()
+            if scan_level is None:
+                messagebox.showwarning("Scan Level Not Chosen", "You must choose a scan level to continue.")
+                logging.warning("Scan level selection was canceled by the user.")
+                return
 
+            leftovers_cleaner.clean_up(selected_program, scan_level)
+
+            messagebox.showinfo("Success", f"{selected_program} has been removed with a {scan_level} scan!")
+            logging.info(f"Cleanup complete for {selected_program} at {scan_level} scan level.")
+        else:
+            logging.info("User cancelled program deletion.")
     except Exception as e:
         logging.error(f"Error during program selection: {str(e)}")
         messagebox.showerror("Error", f"An error occurred: {str(e)}")
 
-def load_programs():
-    """Loads installed programs into the listbox."""
-    try:
-        program_listbox.delete(0, tk.END)  # Clear the listbox
-        logging.info("Loading installed programs...")
+# Modern UI with Dark Mode
+def create_interface():
+    """Creates the main GUI window."""
+    app = tk.Tk()
+    app.title("ZeroTrace Uninstaller")
+    app.geometry("700x500")
+    app.config(bg="#2C2C2C")
 
-        global installed_programs
-        installed_programs = file_finder.find_installed_programs()
+    # Style for modern look
+    style = ttk.Style()
+    style.theme_use("clam")
+    style.configure("TButton", background="#3C3C3C", foreground="white", font=("Arial", 14))
+    style.configure("TLabel", background="#2C2C2C", foreground="white", font=("Arial", 16))
 
-        for program in installed_programs.keys():
-            program_listbox.insert(tk.END, program)
+    title_label = ttk.Label(app, text="ZeroTrace - Uninstaller", style="TLabel")
+    title_label.pack(pady=20)
 
-        logging.info("Installed programs loaded successfully.")
+    # Program Listbox
+    scrollbar = tk.Scrollbar(app)
+    program_listbox = tk.Listbox(app, height=15, width=50, yscrollcommand=scrollbar.set, bg="#3C3C3C", fg="white", font=("Arial", 12))
+    scrollbar.config(command=program_listbox.yview)
+    scrollbar.pack(side="right", fill="y")
+    program_listbox.pack(pady=20)
 
-    except Exception as e:
-        logging.error(f"Error loading programs: {str(e)}")
-        messagebox.showerror("Error", f"An error occurred while loading programs: {str(e)}")
+    # Load installed programs
+    installed_programs = file_finder.find_installed_programs()
+    for program in installed_programs.keys():
+        program_listbox.insert(tk.END, program)
 
-# Create the main window
-app = tk.Tk()
-app.title("ZeroTrace Uninstaller")
-app.geometry("600x400")
-app.config(bg="#1E1E1E")
+    # Remove Program Button
+    remove_button = ttk.Button(app, text="Remove Program", command=lambda: on_program_select(program_listbox, installed_programs))
+    remove_button.pack(pady=10)
 
-# Style
-style = ttk.Style()
-style.theme_use("clam")
-style.configure("TButton", background="#333333", foreground="white", font=("Arial", 12))
-style.configure("TLabel", background="#1E1E1E", foreground="white", font=("Arial", 12))
-
-# Title Label
-title_label = ttk.Label(app, text="ZeroTrace - Uninstaller", style="TLabel")
-title_label.pack(pady=10)
-
-# Create a scrollbar
-scrollbar = tk.Scrollbar(app)
-
-# Listbox for programs
-program_listbox = tk.Listbox(app, bg="#2E2E2E", fg="white", selectbackground="#444444", font=("Arial", 10), yscrollcommand=scrollbar.set)
-scrollbar.config(command=program_listbox.yview)
-
-# Pack the scrollbar and listbox
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-program_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-# Remove button
-remove_button = ttk.Button(app, text="Remove Program", command=on_program_select)
-remove_button.pack(pady=10)
-
-# Load installed programs
-load_programs()
-
-# Start the GUI loop
-try:
     app.mainloop()
-except Exception as e:
-    logging.error(f"Unhandled exception in GUI: {str(e)}")
-    raise
+
+if __name__ == "__main__":
+    create_interface()

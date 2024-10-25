@@ -46,10 +46,10 @@ def main():
         return
 
     logging.info("Launching ZeroTrace...")
-    
+
     # Initialize the GUI (which will handle the program logic)
     try:
-        interface.app.mainloop()
+        interface.create_interface()  # Correct function to call
     except Exception as e:
         logging.error(f"Unhandled exception in GUI: {str(e)}")
 
