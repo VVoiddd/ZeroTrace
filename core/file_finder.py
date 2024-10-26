@@ -5,15 +5,14 @@ import winreg
 import datetime
 import logging
 
-# Set up logging
+# Set up logging for file finder
 log_dir = "Logs"
 os.makedirs(log_dir, exist_ok=True)
 
-timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-log_file = os.path.join(log_dir, f'file_finder_logs_{timestamp}.txt')
+file_finder_log = os.path.join(log_dir, f'file_finder_logs_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.txt')
 
 logging.basicConfig(
-    filename=log_file,
+    filename=file_finder_log,
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )

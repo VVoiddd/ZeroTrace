@@ -5,22 +5,20 @@ import datetime
 import shutil
 import logging
 
-# Set up logging
+# Set up logging for leftovers cleaner
 log_dir = "Logs"
 os.makedirs(log_dir, exist_ok=True)
 
-application_log = os.path.join(log_dir, 'applicationdata.txt')
+leftover_log = os.path.join(log_dir, 'leftovers_cleaner_logs.txt')
 
 logging.basicConfig(
-    filename=application_log,
+    filename=leftover_log,
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
 def find_leftovers(program_name, scan_level="medium"):
-    """Finds leftover files and directories associated with the specified program.
-       Supports light, medium, and aggressive scan levels.
-    """
+    """Finds leftover files and directories associated with the specified program."""
     leftovers = []
     common_dirs = [
         os.path.expanduser("~\\AppData\\Local"),
@@ -29,7 +27,6 @@ def find_leftovers(program_name, scan_level="medium"):
         os.path.expanduser("~\\Temp"),
     ]
     
-    # Aggressive scan will include more directories
     if scan_level == "aggressive":
         common_dirs += [
             "C:\\ProgramData",

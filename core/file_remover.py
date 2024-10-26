@@ -4,14 +4,14 @@ import os
 import shutil
 import logging
 
-# Set up logging
+# Set up logging for file remover
 log_dir = "Logs"
 os.makedirs(log_dir, exist_ok=True)
 
-application_log = os.path.join(log_dir, 'applicationdata.txt')
+file_remover_log = os.path.join(log_dir, 'file_remover_logs.txt')
 
 logging.basicConfig(
-    filename=application_log,
+    filename=file_remover_log,
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
